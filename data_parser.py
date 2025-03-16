@@ -269,7 +269,8 @@ class DataParser:
                     for w in w_chars:
                         for i in i_chars:
                             for n in n_chars:
-                                pattern = f"{h}\s*{p}\s*{w}\s*{i}\s*{n}"
+                                #pattern = f"{h}\s*{p}\s*{w}\s*{i}\s*{n}"
+                                pattern = r"{h}\s*{p}\s*{w}\s*{i}\s*{n}"
                                 if re.search(pattern, text.lower()):
                                     match = re.search(pattern, text.lower())
                                     data['has_special_text'] = True
