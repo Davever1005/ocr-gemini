@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Slip OCR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .upload-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .upload-section:hover {
+            border-color: #007bff;
+        }
+        .upload-section p {
+            margin-bottom: 15px;
+            color: #666;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .upload-btn:hover {
+            background-color: #0056b3;
+        }
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .results-table th, .results-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .results-table th {
+            background-color: #007bff;
+            color: white;
+        }
+        .results-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .results-table tr:hover {
+            background-color: #e9e9e9;
+        }
+        .status {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .file-name {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        .log-section {
+            margin-top: 30px;
+        }
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .log-table th, .log-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .log-table th {
+            background-color: #343a40;
+            color: white;
+        }
+        .log-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .log-table tr:hover {
+            background-color: #e9e9e9;
+        }
+        .clear-log-btn {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .clear-log-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bank Slip OCR</h1>
+        
+        <div class="status success" id="successStatus"></div>
+        <div class="status error" id="errorStatus"></div>
+        
+        <div class="upload-section" id="dropArea">
+            <p>Drag and drop a bank slip image here, or click to select a file</p>
+            <label for="fileInput" class="upload-btn">Select File</label>
+            <input type="file" id="fileInput" class="file-input" accept=".jpg,.jpeg,.png">
+            <p class="file-name" id="fileName"></p>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="loading-spinner"></div>
+            <p>Processing image, please wait...</p>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <h2>Extracted Data</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                    <!-- Results will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="log-section">
+            <h2>Processing Log</h2>
+            <button class="clear-log-btn" id="clearLogBtn">Clear Log</button>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>File Name</th>
+                        <th>Transaction Type</th>
+                        <th>Account Number</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Special Text</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody">
+                    <!-- Log entries will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsTableBody = document.getElementById('resultsTableBody');
+            const successStatus = document.getElementById('successStatus');
+            const errorStatus = document.getElementById('errorStatus');
+            const logTableBody = document.getElementById('logTableBody');
+            const clearLogBtn = document.getElementById('clearLogBtn');
+            
+            // Initialize log from localStorage if available
+            loadLogFromStorage();
+            
+            // Handle file selection via button
+            fileInput.addEventListener('change', function(e) {
+                handleFiles(this.files);
+            });
+            
+            // Handle drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = '#007bff';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = '#ccc';
+            }
+            
+            dropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }, false);
+            
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                const file = files[0];
+                if (!file.type.match('image.*')) {
+                    showError('Please select an image file (JPG, JPEG, or PNG)');
+                    return;
+                }
+                
+                fileName.textContent = file.name;
+                uploadFile(file);
+            }
+            
+            function uploadFile(file) {
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                resultsSection.style.display = 'none';
+                hideStatus();
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (data.success) {
+                        displayResults(data.data, file.name);
+                        addToLog(data.data, file.name);
+                        showSuccess('Image processed successfully!');
+                    } else {
+                        showError('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    loadingIndicator.style.display = 'none';
+                    showError('Error: ' + error.message);
+                });
+            }
+            
+            function displayResults(data, filename) {
+                resultsTableBody.innerHTML = '';
+                resultsSection.style.display = 'block';
+                
+                // Add each field to the results table
+                for (const [key, value] of Object.entries(data)) {
+                    const row = document.createElement('tr');
+                    
+                    const keyCell = document.createElement('td');
+                    keyCell.textContent = formatKey(key);
+                    row.appendChild(keyCell);
+                    
+                    const valueCell = document.createElement('td');
+                    valueCell.textContent = formatValue(value);
+                    row.appendChild(valueCell);
+                    
+                    resultsTableBody.appendChild(row);
+                }
+            }
+            
+            function formatKey(key) {
+                // Convert snake_case to Title Case
+                return key.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            function formatValue(value) {
+                if (value === null || value === undefined) {
+                    return 'N/A';
+                }
+                if (typeof value === 'boolean') {
+                    return value ? 'Yes' : 'No';
+                }
+                return value.toString();
+            }
+            
+            function showSuccess(message) {
+                successStatus.textContent = message;
+                successStatus.style.display = 'block';
+                errorStatus.style.display = 'none';
+            }
+            
+            function showError(message) {
+                errorStatus.textContent = message;
+                errorStatus.style.display = 'block';
+                successStatus.style.display = 'none';
+            }
+            
+            function hideStatus() {
+                successStatus.style.display = 'none';
+                errorStatus.style.display = 'none';
+            }
+            
+            function addToLog(data, filename) {
+                const now = new Date();
+                const timeString = now.toLocaleString();
+                
+                const row = document.createElement('tr');
+                
+                // Time
+                const timeCell = document.createElement('td');
+                timeCell.textContent = timeString;
+                row.appendChild(timeCell);
+                
+                // File Name
+                const fileCell = document.createElement('td');
+                fileCell.textContent = filename;
+                row.appendChild(fileCell);
+                
+                // Transaction Type
+                const typeCell = document.createElement('td');
+                typeCell.textContent = data.transaction_type || 'N/A';
+                row.appendChild(typeCell);
+                
+                // Account Number
+                const accountCell = document.createElement('td');
+                accountCell.textContent = data.account_number || 'N/A';
+                row.appendChild(accountCell);
+                
+                // Date
+                const dateCell = document.createElement('td');
+                dateCell.textContent = data.date || 'N/A';
+                row.appendChild(dateCell);
+                
+                // Amount
+                const amountCell = document.createElement('td');
+                amountCell.textContent = data.amount || 'N/A';
+                row.appendChild(amountCell);
+                
+                // Special Text
+                const specialTextCell = document.createElement('td');
+                specialTextCell.textContent = data.special_text_found || 'None';
+                row.appendChild(specialTextCell);
+                
+                // Status
+                const statusCell = document.createElement('td');
+                statusCell.textContent = data.has_special_text ? 'Verified' : 'Processed';
+                row.appendChild(statusCell);
+                
+                logTableBody.prepend(row);
+                
+                // Save log to localStorage
+                saveLogToStorage();
+            }
+            
+            function saveLogToStorage() {
+                localStorage.setItem('bankSlipLog', logTableBody.innerHTML);
+            }
+            
+            function loadLogFromStorage() {
+                const savedLog = localStorage.getItem('bankSlipLog');
+                if (savedLog) {
+                    logTableBody.innerHTML = savedLog;
+                }
+            }
+            
+            clearLogBtn.addEventListener('click', function() {
+                logTableBody.innerHTML = '';
+                localStorage.removeItem('bankSlipLog');
+            });
+        });
+    </script>
+</body>
