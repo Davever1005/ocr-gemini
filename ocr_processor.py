@@ -78,7 +78,8 @@ class OCRProcessor:
             # Only replace characters in numeric contexts
             for char, replacement in replacements.items():
                 # Check if this is in a numeric context (surrounded by numbers)
-                fixed_account = re.sub(f'(?<=\d){char}(?=\d)', replacement, fixed_account)
+                #fixed_account = re.sub(f'(?<=\d){char}(?=\d)', replacement, fixed_account)
+                fixed_account = re.sub(rf'(?<=\d){char}(?=\d)', replacement, fixed_account)
             
             # Replace in the original text if changes were made
             if fixed_account != account_num:
